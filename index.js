@@ -38,13 +38,13 @@ window.addEventListener('load', function() {
         })
 });
 
-for (var i = 0; i < inputs.length; i++) {
-  inputs[i].addEventListener('keyup', function() { moveToNextInput(event) });
-}
+inputs.forEach(input => {
+  input.addEventListener('keyup', function() { moveToNextInput(event) })
+})
 
-for (var i = 0; i < keyLetters.length; i++) {
-  keyLetters[i].addEventListener('click', function() { clickLetter(event) });
-}
+keyLetters.forEach(key => {
+  key.addEventListener('click', function() { clickLetter(event) })
+})
 
 guessButton.addEventListener('click', submitGuess);
 
@@ -68,13 +68,13 @@ function getRandomWord() {
 }
 
 function updateInputPermissions() {
-  for(var i = 0; i < inputs.length; i++) {
-    if(!inputs[i].id.includes(`-${currentRow}-`)) {
-      inputs[i].disabled = true;
-    } else {
-      inputs[i].disabled = false;
-    }
-  }
+    inputs.forEach(input => {
+      if(!input.id.includes(`-${currentRow}-`)) {
+        input.disabled = true;
+      } else {
+        input.disabled = false;
+      }
+    })
 
   inputs[0].focus();
 }
@@ -96,12 +96,13 @@ function clickLetter(e) {
   var activeInput = null;
   var activeIndex = null;
 
-  for (var i = 0; i < inputs.length; i++) {
-    if(inputs[i].id.includes(`-${currentRow}-`) && !inputs[i].value && !activeInput) {
-      activeInput = inputs[i];
+  inputs.forEach((input, i) => {
+    if(input.id.includes(`-${currentRow}-`) && !input.value && !activeInput) {
+      activeInput = input;
       activeIndex = i;
     }
-  }
+  })
+    
 
   activeInput.value = e.target.innerText;
   inputs[activeIndex + 1].focus();
@@ -124,11 +125,11 @@ function submitGuess() {
 function checkIsWord() {
   guess = '';
 
-  for(var i = 0; i < inputs.length; i++) {
-    if(inputs[i].id.includes(`-${currentRow}-`)) {
-      guess += inputs[i].value;
+  inputs.forEach(input => {
+    if(input.id.includes(`-${currentRow}-`)) {
+      guess += input.value;
     }
-  }
+  })
 
   return fetchedWords.includes(guess);
 }
@@ -136,30 +137,29 @@ function checkIsWord() {
 function compareGuess() {
   var guessLetters = guess.split('');
 
-  for (var i = 0; i < guessLetters.length; i++) {
-
-    if (winningWord.includes(guessLetters[i]) && winningWord.split('')[i] !== guessLetters[i]) {
+  guessLetters.forEach((letter, i) => {
+    if (winningWord.includes(letter) && winningWord.split('')[i] !== letter) {
       updateBoxColor(i, 'wrong-location');
-      updateKeyColor(guessLetters[i], 'wrong-location-key');
-    } else if (winningWord.split('')[i] === guessLetters[i]) {
+      updateKeyColor(letter, 'wrong-location-key');
+    } else if (winningWord.split('')[i] === letter) {
       updateBoxColor(i, 'correct-location');
-      updateKeyColor(guessLetters[i], 'correct-location-key');
+      updateKeyColor(letter, 'correct-location-key');
     } else {
       updateBoxColor(i, 'wrong');
-      updateKeyColor(guessLetters[i], 'wrong-key');
+      updateKeyColor(letter, 'wrong-key');
     }
-  }
+  })
 
 }
 
 function updateBoxColor(letterLocation, className) {
   var row = [];
 
-  for (var i = 0; i < inputs.length; i++) {
-    if(inputs[i].id.includes(`-${currentRow}-`)) {
-      row.push(inputs[i]);
+  inputs.forEach((input, i) => {
+    if(input.id.includes(`-${currentRow}-`)) {
+      row.push(input);
     }
-  }
+  })
 
   row[letterLocation].classList.add(className);
 }
@@ -167,11 +167,11 @@ function updateBoxColor(letterLocation, className) {
 function updateKeyColor(letter, className) {
   var keyLetter = null;
 
-  for (var i = 0; i < keyLetters.length; i++) {
-    if (keyLetters[i].innerText === letter) {
-      keyLetter = keyLetters[i];
+  keyLetters.forEach(key => {
+    if (key.innerText === letter) {
+      keyLetter = key;
     }
-  }
+  })
 
   keyLetter.classList.add(className);
 }
@@ -260,16 +260,18 @@ function startNewGame() {
 }
 
 function clearGameBoard() {
-  for (var i = 0; i < inputs.length; i++) {
-    inputs[i].value = '';
-    inputs[i].classList.remove('correct-location', 'wrong-location', 'wrong');
-  }
+  inputs.forEach(input => {
+    input.value = '';
+    input.classList.remove('correct-location', 'wrong-location', 'wrong');
+  })
+
 }
 
 function clearKey() {
-  for (var i = 0; i < keyLetters.length; i++) {
-    keyLetters[i].classList.remove('correct-location-key', 'wrong-location-key', 'wrong-key');
-  }
+  keyLetters.forEach(key => {
+    key.classList.remove('correct-location-key', 'wrong-location-key', 'wrong-key');
+  })
+
 }
 
 // Change Page View Functions
