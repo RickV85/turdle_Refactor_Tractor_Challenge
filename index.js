@@ -4,6 +4,13 @@ var currentRow = 1;
 var guess = '';
 var gamesPlayed = [];
 let fetchedWords = [];
+let totalGamesPlayed = 0;
+let totalGamesWon = 0;
+let avgGamesWon = 0;
+let totalGusses = 0;
+let avgGuessesToWin = 0;
+
+let fetchedStats = null;
 
 // Query Selectors
 var inputs = document.querySelectorAll('input');
@@ -31,11 +38,19 @@ var statsAverageGuesses = document.querySelector('#stats-average-guesses');
 // Event Listeners
 window.addEventListener('load', function() {
   fetch('http://localhost:3001/api/v1/words')
-        .then((response) => response.json())
-        .then((data) => {
-            fetchedWords = data;
-            setGame();
-        })
+    .then((response) => response.json())
+    .then((data) => {
+        fetchedWords = data;
+        setGame();
+    })
+  fetch('http://localhost:3001/api/v1/games')
+    .then((response) => response.json())
+    .then(stats => {
+      stats.forEach(game => {
+        gamesPlayed.push({'solved': game.solved, 'guesses': game.numGuesses});
+      }) 
+      updateStatsDOM('numGuesses');
+    })
 });
 
 inputs.forEach(input => {
@@ -58,7 +73,6 @@ viewStatsButton.addEventListener('click', viewStats);
 function setGame() {
   currentRow = 1;
   winningWord = getRandomWord();
-  console.log('winning word :', winningWord);
   updateInputPermissions();
 }
 
@@ -205,22 +219,27 @@ function declareWinner() {
 function recordGameStats() {
   if (checkForWin()) {
     gamesPlayed.push({ solved: true, guesses: currentRow });
+    postGameStats({ solved: true, guesses: currentRow });
   } else if (!checkForWin()) {
     gamesPlayed.push({ solved: false, guesses: 6 });
+    postGameStats({ solved: false, guesses: 6 })
   }
-  
-  let totalGamesPlayed = gamesPlayed.length;
-  let totalGamesWon = gamesPlayed.reduce((total, game) => {
+  updateStatsDOM();
+}
+
+function updateStatsDOM() {
+  totalGamesPlayed = gamesPlayed.length;
+  totalGamesWon = gamesPlayed.reduce((total, game) => {
     if (game.solved) {
       total++
     }
     return total;
   }, 0);
-  let avgGamesWon = ((totalGamesWon / totalGamesPlayed) * 100).toFixed(0);
-  let totalGusses = gamesPlayed.reduce((total, game) => {
-    return total += game.guesses
-  }, 0)
-  let avgGuessesToWin = (totalGusses / totalGamesWon).toFixed(0);
+  avgGamesWon = ((totalGamesWon / totalGamesPlayed) * 100).toFixed(0);
+  totalGusses = gamesPlayed.reduce((total, game) => {
+    return total += game.guesses;
+  }, 0);
+  avgGuessesToWin = (totalGusses / totalGamesWon).toFixed(0);
 
   statsTotalGames.innerText = totalGamesPlayed;
   statsPercentCorrect.innerText = avgGamesWon;
@@ -230,6 +249,19 @@ function recordGameStats() {
   } else {
     averageStatsDisplay.classList.add('hidden');
   }
+}
+
+function postGameStats(stats) {
+  fetch('http://localhost:3001/api/v1/games', {
+    method: 'POST',
+    body: JSON.stringify(stats),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+    .then(response => response.json())
+    .then(json => console.log(json))
+    .catch(err => console.log('ERROR ON POST', err));
 }
 
 function displayGameOverYouLost() {
