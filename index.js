@@ -242,7 +242,9 @@ function updateStatsDOM() {
   avgGuessesToWin = (totalGusses / totalGamesWon).toFixed(0);
 
   statsTotalGames.innerText = totalGamesPlayed;
-  statsPercentCorrect.innerText = avgGamesWon;
+  if (totalGamesPlayed >= 1) {
+    statsPercentCorrect.innerText = avgGamesWon;
+  }
   if (totalGamesWon >= 1) {
     averageStatsDisplay.classList.remove('hidden');
     statsAverageGuesses.innerText = avgGuessesToWin;
