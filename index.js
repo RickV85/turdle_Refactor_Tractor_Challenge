@@ -22,6 +22,11 @@ var gameOverMessage = document.querySelector('#game-over-message');
 var gameOverInfo = document.querySelector('#game-over-info')
 var gameOverGuessCount = document.querySelector('#game-over-guesses-count');
 var gameOverGuessGrammar = document.querySelector('#game-over-guesses-plural');
+var statsTotalGames = document.querySelector('#stats-total-games');
+var statsPercentCorrect = document.querySelector('#stats-percent-correct');
+var averageStatsDisplay = document.querySelector('#avg-stats');
+var statsAverageGuesses = document.querySelector('#stats-average-guesses');
+
 
 // Event Listeners
 window.addEventListener('load', function() {
@@ -30,7 +35,6 @@ window.addEventListener('load', function() {
         .then((data) => {
             fetchedWords = data;
             setGame();
-            console.log('winning word :', winningWord);
         })
 });
 
@@ -54,6 +58,7 @@ viewStatsButton.addEventListener('click', viewStats);
 function setGame() {
   currentRow = 1;
   winningWord = getRandomWord();
+  console.log('winning word :', winningWord);
   updateInputPermissions();
 }
 
@@ -185,7 +190,6 @@ function changeRow() {
 
 function declareLoss() {
   recordGameStats();
-  // Something neeededto change game over message
   displayGameOverYouLost();
   viewGameOverMessage();
   setTimeout(startNewGame, 4000);
@@ -202,13 +206,40 @@ function recordGameStats() {
   if (checkForWin()) {
     gamesPlayed.push({ solved: true, guesses: currentRow });
   } else if (!checkForWin()) {
-    gamesPlayed.push({ solved: false, guesses: currentRow });
+    gamesPlayed.push({ solved: false, guesses: 6 });
+  }
+  
+  let totalGamesPlayed = gamesPlayed.length;
+  let totalGamesWon = gamesPlayed.reduce((total, game) => {
+    if (game.solved) {
+      total++
+    }
+    return total;
+  }, 0);
+  let avgGamesWon = ((totalGamesWon / totalGamesPlayed) * 100).toFixed(0);
+  let totalGusses = gamesPlayed.reduce((total, game) => {
+    return total += game.guesses
+  }, 0)
+  let avgGuessesToWin = (totalGusses / totalGamesWon).toFixed(0);
+
+  statsTotalGames.innerText = totalGamesPlayed;
+  statsPercentCorrect.innerText = avgGamesWon;
+  if (totalGamesWon >= 1) {
+    averageStatsDisplay.classList.remove('hidden');
+    statsAverageGuesses.innerText = avgGuessesToWin;
+  } else {
+    averageStatsDisplay.classList.add('hidden');
   }
 }
 
 function displayGameOverYouLost() {
-  gameOverMessage.innerText = "Sorry!";
-  gameOverInfo.innerText = "You lost. Don't worry you can play again unlike Wordle. Let's go!"
+  gameOverInfo.classList.add('hidden');
+  gameOverMessage.innerText = `Sorry, you lost!
+  Let's play again!`;
+  setTimeout(function() {
+    gameOverInfo.classList.remove('hidden');
+    gameOverMessage.innerText = 'Yay!';
+  }, 5000)
 }
 
 function changeGameOverText() {
