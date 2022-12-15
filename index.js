@@ -3,6 +3,7 @@ var winningWord = '';
 var currentRow = 1;
 var guess = '';
 var gamesPlayed = [];
+let fetchedWords = [];
 
 // Query Selectors
 var inputs = document.querySelectorAll('input');
@@ -17,11 +18,21 @@ var letterKey = document.querySelector('#key-section');
 var rules = document.querySelector('#rules-section');
 var stats = document.querySelector('#stats-section');
 var gameOverBox = document.querySelector('#game-over-section');
+var gameOverMessage = document.querySelector('#game-over-message');
+var gameOverInfo = document.querySelector('#game-over-info')
 var gameOverGuessCount = document.querySelector('#game-over-guesses-count');
 var gameOverGuessGrammar = document.querySelector('#game-over-guesses-plural');
 
 // Event Listeners
-window.addEventListener('load', setGame);
+window.addEventListener('load', function() {
+  fetch('http://localhost:3001/api/v1/words')
+        .then((response) => response.json())
+        .then((data) => {
+            fetchedWords = data;
+            setGame();
+            console.log('winning word :', winningWord);
+        })
+});
 
 for (var i = 0; i < inputs.length; i++) {
   inputs[i].addEventListener('keyup', function() { moveToNextInput(event) });
@@ -47,8 +58,8 @@ function setGame() {
 }
 
 function getRandomWord() {
-  var randomIndex = Math.floor(Math.random() * 2500);
-  return words[randomIndex];
+  var randomIndex = Math.floor(Math.random() * 2498);
+  return fetchedWords[randomIndex];
 }
 
 function updateInputPermissions() {
@@ -68,7 +79,11 @@ function moveToNextInput(e) {
 
   if( key !== 8 && key !== 46 ) {
     var indexOfNext = parseInt(e.target.id.split('-')[2]) + 1;
+    if (inputs[indexOfNext]) {
     inputs[indexOfNext].focus();
+    } else {
+      return;
+    }
   }
 }
 
@@ -110,7 +125,7 @@ function checkIsWord() {
     }
   }
 
-  return words.includes(guess);
+  return fetchedWords.includes(guess);
 }
 
 function compareGuess() {
@@ -163,6 +178,17 @@ function checkForWin() {
 function changeRow() {
   currentRow++;
   updateInputPermissions();
+  if (currentRow >= 7) {
+    declareLoss();
+  }
+}
+
+function declareLoss() {
+  recordGameStats();
+  // Something neeededto change game over message
+  displayGameOverYouLost();
+  viewGameOverMessage();
+  setTimeout(startNewGame, 4000);
 }
 
 function declareWinner() {
@@ -173,7 +199,16 @@ function declareWinner() {
 }
 
 function recordGameStats() {
-  gamesPlayed.push({ solved: true, guesses: currentRow });
+  if (checkForWin()) {
+    gamesPlayed.push({ solved: true, guesses: currentRow });
+  } else if (!checkForWin()) {
+    gamesPlayed.push({ solved: false, guesses: currentRow });
+  }
+}
+
+function displayGameOverYouLost() {
+  gameOverMessage.innerText = "Sorry!";
+  gameOverInfo.innerText = "You lost. Don't worry you can play again unlike Wordle. Let's go!"
 }
 
 function changeGameOverText() {
